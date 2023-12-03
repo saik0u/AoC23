@@ -6,9 +6,9 @@ let fileContents = try String(contentsOf: fileURL, encoding: String.Encoding.utf
 //print(fileContents)
 
 struct Cubes {
-    let red: Int
-    let green: Int
-    let blue: Int
+    var red: Int
+    var green: Int
+    var blue: Int
 }
 
 let possibleCubes = Cubes(red: 12, green: 13, blue: 14)
@@ -21,16 +21,12 @@ enum Color: String {
 
 let sum = fileContents
     .split(separator: "\n")
-    .compactMap({
+    .map({
         let game = $0.split(separator: ":")
-
-        guard let gameIdRaw = game.first?.split(separator: " ").last,
-              let gameId = Int(String(gameIdRaw))
-        else { fatalError("No gameId!") }
-
-        var isValid = true
+        var topCubes = Cubes(red: 1, green: 1, blue: 1)
 
         game.last?.split(separator: ";").forEach {
+
             $0.split(separator: ",").forEach {
 
                 let colors = $0.split(separator: " ")
@@ -43,25 +39,22 @@ let sum = fileContents
 
                 switch color {
                 case .red:
-                    if count > possibleCubes.red {
-                        isValid = false
+                    if count > topCubes.red {
+                        topCubes.red = count
                     }
                 case .green:
-                    if count > possibleCubes.green {
-                        isValid = false
+                    if count > topCubes.green {
+                        topCubes.green = count
                     }
                 case .blue:
-                    if count > possibleCubes.blue {
-                        isValid = false
+                    if count > topCubes.blue {
+                        topCubes.blue = count
                     }
                 }
             }
         }
 
-        if isValid {
-            return gameId
-        }
-        return nil
+        return topCubes.red * topCubes.blue * topCubes.green
     })
     .reduce(0, +)
 
