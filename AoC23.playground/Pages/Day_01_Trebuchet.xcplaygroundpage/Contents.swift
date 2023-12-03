@@ -7,6 +7,7 @@ let calibrationValues = fileContents.split(separator: "\n")
 //print(calibrationValues)
 
 let digits = /([1-9]|one|two|three|four|five|six|seven|eight|nine)/
+let digitsReversed = /([1-9]|eno|owt|eerht|ruof|evif|xis|neves|thgie|enin)/
 
 func replace(letterDigit: Substring) -> Substring {
     letterDigit.replacing("one", with: "1")
@@ -22,16 +23,19 @@ func replace(letterDigit: Substring) -> Substring {
 
 let extractedValues = calibrationValues.map { value in
     print("value: \(value)")
-    let digitRange = value.ranges(of: digits)
-    guard let firstRange = digitRange.first,
-          let lastRange = digitRange.last
-    else { fatalError("No range!") }
 
+    // First Digit
+    let digitRange = value.ranges(of: digits)
+    guard let firstRange = digitRange.first else { fatalError("No range!") }
     print("first: \(value[firstRange])")
     let firstValue = replace(letterDigit: value[firstRange])
 
-    print("last: \(value[lastRange])")
-    let lastValue = replace(letterDigit: value[lastRange])
+    // Last Digit
+    // This fixes edge cases like 'oneight'
+    let valueReversed = Substring(value.reversed())
+    guard let reversedRange = valueReversed.ranges(of: digitsReversed).first else { fatalError("No range!")}
+    print("last: \(String(valueReversed[reversedRange].reversed()))")
+    let lastValue = replace(letterDigit: Substring(valueReversed[reversedRange].reversed()))
 
     guard let intValue = Int(firstValue + lastValue) else { fatalError("No Int!") }
     print("int: \(intValue)")
