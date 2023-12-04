@@ -13,16 +13,7 @@ let sum = scratchcards.map {
           let myNumbers = allNumbers?.last?.split(separator: " ").compactMap ({ Int($0) })
     else { fatalError("No numbers!") }
 
-    let hits = myNumbers.compactMap { num in
-        for win in winningNumbers {
-            if num == win {
-                return num
-            }
-        }
-        return nil
-    }
-
-//    print("hit: \(hits)")
+    let hits = Set(winningNumbers).intersection(Set(myNumbers))
 
     var points = hits.count
 
@@ -36,8 +27,6 @@ let sum = scratchcards.map {
             i -= 1
         }
     }
-
-//    print("calced points: \(points)")
 
     return points
 }
