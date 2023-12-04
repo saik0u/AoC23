@@ -6,9 +6,7 @@ let fileContents = try String(contentsOf: fileURL, encoding: String.Encoding.utf
 let schematic = fileContents.split(separator: "\n")
 
 let digits = /([10-999]+)/
-let symbols = /(@|#|\$|%|&|\*|-|=|\+|\/)/
-
-var currentRow = 0
+let symbols = /(\*)/
 
 let sum = schematic.map({ value in
 
@@ -17,60 +15,64 @@ let sum = schematic.map({ value in
 
     let currentIndex = schematic.firstIndex(of: value)!
 
-    var partNum: [Int] = []
+    var partNum = 0
 
-    for digitRange in currentRowDigitRanges {
+    for gearRange in currentRowSymbolRanges {
+        var gearParts: [Int] = []
 
-        for symbolRange in currentRowSymbolRanges {
-            if digitRange.upperBound == symbolRange.lowerBound ||
-                digitRange.lowerBound == symbolRange.upperBound,
+        for digitRange in currentRowDigitRanges {
+            if gearRange.upperBound == digitRange.lowerBound ||
+                gearRange.lowerBound == digitRange.upperBound,
                let int = Int(value[digitRange]) {
-
-                partNum.append(int)
-                break
+                gearParts.append(int)
             }
         }
 
         if currentIndex + 1 < schematic.count {
             let nextRow = schematic[currentIndex + 1]
-            let nextRowSymbolRanges = nextRow.ranges(of: symbols)
+            let nextRowDigitRanges = nextRow.ranges(of: digits)
 
-            for symbolRange in nextRowSymbolRanges {
-                let expandedDigitRange = Range(uncheckedBounds: (
-                    lower: nextRow.index(nextRow.startIndex, offsetBy: max(0, digitRange.lowerBound.utf16Offset(in: value) - 1)),
-                    upper: nextRow.index(nextRow.startIndex, offsetBy: min(nextRow.count, digitRange.upperBound.utf16Offset(in: value) + 1))
+            for digitRange in nextRowDigitRanges {
+                let expandedGearRange = Range(uncheckedBounds: (
+                    lower: nextRow.index(nextRow.startIndex, offsetBy: max(0, gearRange.lowerBound.utf16Offset(in: value) - 1)),
+                    upper: nextRow.index(nextRow.startIndex, offsetBy: min(nextRow.count, gearRange.upperBound.utf16Offset(in: value) + 1))
                 ))
 
-                if expandedDigitRange.overlaps(symbolRange),
-                   let int = Int(value[digitRange]) {
-                    partNum.append(int)
-                    break
+                if expandedGearRange.overlaps(digitRange),
+                   let int = Int(nextRow[digitRange]) {
+                    gearParts.append(int)
                 }
             }
         }
 
         if currentIndex - 1 >= 0 {
             let prevRow = schematic[currentIndex - 1]
-            let prevRowSymbolRanges = prevRow.ranges(of: symbols)
+            let prevRowDigitRanges = prevRow.ranges(of: digits)
 
-            for symbolRange in prevRowSymbolRanges {
+            for digitRange in prevRowDigitRanges {
                 let expandedDigitRange = Range(uncheckedBounds: (
-                    lower: prevRow.index(prevRow.startIndex, offsetBy: max(0, digitRange.lowerBound.utf16Offset(in: value) - 1)),
-                    upper: prevRow.index(prevRow.startIndex, offsetBy: min(prevRow.count, digitRange.upperBound.utf16Offset(in: value) + 1))
+                    lower: prevRow.index(prevRow.startIndex, offsetBy: max(0, gearRange.lowerBound.utf16Offset(in: value) - 1)),
+                    upper: prevRow.index(prevRow.startIndex, offsetBy: min(prevRow.count, gearRange.upperBound.utf16Offset(in: value) + 1))
                 ))
 
-                if expandedDigitRange.overlaps(symbolRange),
-                   let int = Int(value[digitRange]) {
-                    partNum.append(int)
-                    break
+                if expandedDigitRange.overlaps(digitRange),
+                   let int = Int(prevRow[digitRange]) {
+                    gearParts.append(int)
                 }
             }
+        }
+
+        if gearParts.count == 2,
+           let first = gearParts.first,
+           let second = gearParts.last {
+
+            let ratio = first * second
+            partNum += ratio
         }
     }
 
     return partNum
 })
-    .flatMap { $0 }
     .reduce(0, +)
 
 print(sum)
